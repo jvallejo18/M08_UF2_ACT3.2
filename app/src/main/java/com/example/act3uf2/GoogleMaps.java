@@ -89,7 +89,6 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
                 if (tracking){
                     lng = location.getLongitude();
                     lat = location.getLatitude();
-                    Log.d("HOLA ESTOY TRUE", "HOLA ESTOY TRUE");
                     rectOptions.add(new LatLng(lat, lng)).width(25)
                             .color(Color.BLUE)
                             .geodesic(true);
@@ -119,7 +118,6 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
                 if (!tracking) {
                     tracking = true;
                     startTracking = newPosition;
-                    String nameLocation = getAddress(lat, lng);
 
                     mMap.addMarker(new MarkerOptions().position(startTracking).title("INICI").icon(BitmapDescriptorFactory
                             .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
@@ -128,7 +126,6 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
                 else{
                     tracking = false;
                     finishTracking = newPosition;
-                    String nameLocation = getAddress(lat, lng);
                     mMap.addMarker(new MarkerOptions().position(finishTracking).title("FINAL"));
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(finishTracking));
                 }
@@ -154,17 +151,5 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
 
     }
 
-    private String getAddress(double lat, double lng) {
-        Geocoder geocoder = new Geocoder(GoogleMaps.this, Locale.getDefault());
-        String add = "";
-        try {
-            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
-            Address obj = addresses.get(0);
-            add = obj.getAddressLine(0);
-            Log.v("IGA", "Address" + add);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return add;
-    }
+
 }
