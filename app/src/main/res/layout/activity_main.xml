@@ -26,7 +26,7 @@
         android:layout_width="174dp"
         android:layout_height="104dp"
         android:background="#7300C34A"
-        android:text="Aparcament"
+        android:text="Tracking"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -22,10 +23,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,14 +42,19 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
     String txtPosition;
     Button addMarkerBtn;
     LatLng newPosition;
-    LatLng parking;
+    LatLng startTracking;
+    LatLng finishTracking;
+    Polyline polyline;
+    boolean tracking = false;
     double lat;
     double lng;
-
+    int i = 0;
+    PolylineOptions rectOptions = new PolylineOptions();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_google_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -66,7 +76,9 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        // Add a marker in Sydney and move the camera
+        mMap.setMyLocationEnabled(true);
+
+
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -74,8 +86,16 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
             @Override
             public void onLocationChanged(Location location) {
                 newPosition = new LatLng(location.getLatitude(), location.getLongitude());
-                lng = location.getLongitude();
-                lat = location.getLatitude();
+                if (tracking){
+                    lng = location.getLongitude();
+                    lat = location.getLatitude();
+                    Log.d("HOLA ESTOY TRUE", "HOLA ESTOY TRUE");
+                    rectOptions.add(new LatLng(lat, lng)).width(25)
+                            .color(Color.BLUE)
+                            .geodesic(true);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(newPosition));
+                    polyline = mMap.addPolyline(rectOptions);
+                }
             }
             @Override
             public void onProviderDisabled(String provider) {
@@ -94,14 +114,34 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
         addMarkerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mMap.clear();
-                parking = newPosition;
-                String nameLocation = getAddress(lat, lng);
-                mMap.addMarker(new MarkerOptions().position(parking).title(nameLocation));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(parking));
+                i++;
+
+                if (!tracking) {
+                    tracking = true;
+                    startTracking = newPosition;
+                    String nameLocation = getAddress(lat, lng);
+
+                    mMap.addMarker(new MarkerOptions().position(startTracking).title("INICI").icon(BitmapDescriptorFactory
+                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(startTracking));
+                }
+                else{
+                    tracking = false;
+                    finishTracking = newPosition;
+                    String nameLocation = getAddress(lat, lng);
+                    mMap.addMarker(new MarkerOptions().position(finishTracking).title("FINAL"));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(finishTracking));
+                }
+                if (i%3 == 0){
+                    if (tracking) {
+                        tracking = false;
+                    }
+                    polyline.remove();
+                    mMap.clear();
+                    Toast.makeText(GoogleMaps.this, "Esborrem el tracking anterior", Toast.LENGTH_LONG).show();
+                }
+
             }
-
-
         });
 
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -110,7 +150,7 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback {
                     Manifest.permission.INTERNET}, 10);
             return;
         }
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
     }
 
